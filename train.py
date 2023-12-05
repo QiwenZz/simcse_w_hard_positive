@@ -464,13 +464,30 @@ def main():
             padding="max_length" if data_args.pad_to_max_length else False,
         )
 
+        print(sent_features)
+
+
+
         features = {}
-        if sent2_cname is not None:
-            for key in sent_features:
-                features[key] = [[sent_features[key][i], sent_features[key][i+total], sent_features[key][i+total*2]] for i in range(total)]
+
+        if not model_args.use_hard_positive:
+            if sent2_cname is not None:
+                for key in sent_features:
+                    features[key] = [[sent_features[key][i], sent_features[key][i+total], sent_features[key][i+total*2]] for i in range(total)]
+            else:
+                for key in sent_features:
+                    features[key] = [[sent_features[key][i], sent_features[key][i+total]] for i in range(total)]
+
         else:
             for key in sent_features:
-                features[key] = [[sent_features[key][i], sent_features[key][i+total]] for i in range(total)]
+                features[key] = []
+                for i in range(total):
+                    for _ in range(model_args.hard_positive_candidates):
+                        features[key].append(sent_features[key][i])
+
+
+
+        print(features)
             
         return features
 
