@@ -6,7 +6,7 @@
 
 python train.py \
     --model_name_or_path bert-base-uncased \
-    --train_file data/modified_file.txt \
+    --train_file data/wiki1m_for_simcse.txt \
     --output_dir result/my-unsup-simcse-bert-base-uncased \
     --num_train_epochs 1 \
     --per_device_train_batch_size 64 \
@@ -23,5 +23,5 @@ python train.py \
     --do_train \
     --fp16 \
     --use_hard_positive \
-    --hard_positive_candidates 8 \
+    --hard_positive_candidates 3 \
     "$@"
