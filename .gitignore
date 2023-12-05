@@ -130,7 +130,7 @@ dmypy.json
 .pyre/
 .DS_Store
 .vscode
-data
+data/wiki1m_for_simcse.txt
 result
 .venv-cu11
 wandb
