@@ -63,8 +63,6 @@ class Pooler(nn.Module):
     def forward(self, attention_mask, outputs):
         last_hidden = outputs.last_hidden_state # 100x32x768 
 
-        print('self.pooler_type',self.pooler_type)
-        print('last_hidden.shape',last_hidden[:, 0].shape)
         pooler_output = outputs.pooler_output
         hidden_states = outputs.hidden_states
 
@@ -178,7 +176,6 @@ def cl_forward(cls,
         token_type_ids = token_type_ids.view((-1, token_type_ids.size(-1))) # (bs * num_sent, len)
 
     # print('input_ids',input_ids)
-    print('input_ids',input_ids.shape)
 
     # Get raw embeddings
     outputs = encoder(
@@ -212,15 +209,15 @@ def cl_forward(cls,
     pooler_output = cls.pooler(attention_mask, outputs)
     pooler_output = pooler_output.view((batch_size, num_sent, pooler_output.size(-1))) # (bs, num_sent, hidden) # dimension: 50 x 2 x 768 final: 50 x 5 x 768
 
-    print('start printing out stuffs......................')
-    print('pooler',pooler_output.shape)
+    # print('start printing out stuffs......................')
+    # print('pooler',pooler_output.shape)
 
     # If using "cls", we add an extra MLP layer
     # (same as BERT's original implementation) over the representation.
     if cls.pooler_type == "cls":
         pooler_output = cls.mlp(pooler_output)
     # Separate representation
-    print('pooler',pooler_output.shape)
+    # print('pooler',pooler_output.shape)
     
 
 
@@ -230,12 +227,12 @@ def cl_forward(cls,
     # Apply the function to the entire tensor
     min_pairs_tensor = min_cosine_similarity_pairs(pooler_output)
 
-    print('max_pairs_tensor', min_pairs_tensor)
+    # print('max_pairs_tensor', min_pairs_tensor)
 
 
 
     z1, z2 = min_pairs_tensor[:,0].cuda(), min_pairs_tensor[:,1].cuda()
-    print('z1 device',z1.get_device())
+    # print('z1 device',z1.get_device())
 
 
     # print("type(z1)",type(z1))
@@ -243,7 +240,7 @@ def cl_forward(cls,
     # print(z2)
     # print(z1.shape)
 
-    print('num_sent',num_sent)
+    # print('num_sent',num_sent)
 
     
     # # Hard negative

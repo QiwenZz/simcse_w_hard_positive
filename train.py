@@ -267,13 +267,8 @@ def main():
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-        print('*************',0)
     else:
-        print('&&&&&&&&&&&&&&&&&&&',1)
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-        print('model_args',model_args)
-        print('data_args',data_args)
-        print('training_args',training_args)
 
 
     if (
@@ -400,7 +395,6 @@ def main():
     model.resize_token_embeddings(len(tokenizer))
 
     # Prepare features
-    print('datasets look like":',datasets["train"][0])
     column_names = datasets["train"].column_names
     sent2_cname = None
     if len(column_names) == 2:
@@ -493,7 +487,6 @@ def main():
             load_from_cache_file=not data_args.overwrite_cache,
         )
 
-    print('*******************new one ', train_dataset[0])
     # Data collator
     @dataclass
     class OurDataCollatorWithPadding:
