@@ -482,8 +482,6 @@ def main():
                     features[key].append(temp)
 
 
-        print('sent_features',sent_features)
-        print('feawtures',features)
         return features
 
     if training_args.do_train:

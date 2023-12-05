@@ -97,6 +97,27 @@ def cl_init(cls, config):
     cls.sim = Similarity(temp=cls.model_args.temp)
     cls.init_weights()
 
+# Function to calculate pairwise distances
+def pairwise_distances(batch):
+    # Compute pairwise distance matrix
+    distance_matrix = torch.cdist(batch, batch, p=2)
+    return distance_matrix
+
+# Function to find the tensor of pairs with the maximum distance
+def max_distance_pairs(tensor):
+    max_pairs_tensor = torch.empty(tensor.size(0), 2, tensor.size(2))
+
+    for i, batch in enumerate(tensor):
+        distances = pairwise_distances(batch)
+        # Fill diagonal with -inf to ignore self-distances
+        distances.fill_diagonal_(-float('inf'))
+        # Find the indices of the maximum distance
+        max_idx = torch.argmax(distances)
+        max_pair_indices = (max_idx // distances.size(1), max_idx % distances.size(1))
+        max_pairs_tensor[i] = torch.stack((batch[max_pair_indices[0]], batch[max_pair_indices[1]]))
+
+    return max_pairs_tensor
+
 def cl_forward(cls,
     encoder,
     input_ids=None,
@@ -129,7 +150,7 @@ def cl_forward(cls,
     if token_type_ids is not None:
         token_type_ids = token_type_ids.view((-1, token_type_ids.size(-1))) # (bs * num_sent, len)
 
-    print('input_ids',input_ids)
+    # print('input_ids',input_ids)
     print('input_ids',input_ids.shape)
 
     # Get raw embeddings
@@ -173,30 +194,38 @@ def cl_forward(cls,
         pooler_output = cls.mlp(pooler_output)
     # Separate representation
     print('pooler',pooler_output.shape)
-    z1, z2 = pooler_output[:,0], pooler_output[:,1]
+    
 
 
     # find the farthest positive pair new_z_1, new_z2
-    
 
+
+    # Apply the function to the entire tensor
+    max_pairs_tensor = max_distance_pairs(pooler_output)
+    z1, z2 = max_pairs_tensor[:,0].cuda(), max_pairs_tensor[:,1].cuda()
+    print('z1 device',z1.get_device())
 
 
     # print("type(z1)",type(z1))
     # print(z1)
     # print(z2)
     # print(z1.shape)
-    # Hard negative
-    if num_sent == 3:
-        z3 = pooler_output[:, 2]
+
+    print('num_sent',num_sent)
+
+    
+    # # Hard negative
+    # if num_sent == 3:
+    #     z3 = pooler_output[:, 2]
 
     # Gather all embeddings if using distributed training
     if dist.is_initialized() and cls.training:
-        # Gather hard negative
-        if num_sent >= 3:
-            z3_list = [torch.zeros_like(z3) for _ in range(dist.get_world_size())]
-            dist.all_gather(tensor_list=z3_list, tensor=z3.contiguous())
-            z3_list[dist.get_rank()] = z3
-            z3 = torch.cat(z3_list, 0)
+        # # Gather hard negative
+        # if num_sent >= 3:
+        #     z3_list = [torch.zeros_like(z3) for _ in range(dist.get_world_size())]
+        #     dist.all_gather(tensor_list=z3_list, tensor=z3.contiguous())
+        #     z3_list[dist.get_rank()] = z3
+        #     z3 = torch.cat(z3_list, 0)
 
         # Dummy vectors for allgather
         z1_list = [torch.zeros_like(z1) for _ in range(dist.get_world_size())]
@@ -215,21 +244,21 @@ def cl_forward(cls,
 
     cos_sim = cls.sim(z1.unsqueeze(1), z2.unsqueeze(0))
     # Hard negative
-    if num_sent >= 3:
-        z1_z3_cos = cls.sim(z1.unsqueeze(1), z3.unsqueeze(0))
-        cos_sim = torch.cat([cos_sim, z1_z3_cos], 1)
+    # if num_sent >= 3:
+    #     z1_z3_cos = cls.sim(z1.unsqueeze(1), z3.unsqueeze(0))
+    #     cos_sim = torch.cat([cos_sim, z1_z3_cos], 1)
 
     labels = torch.arange(cos_sim.size(0)).long().to(cls.device)
     loss_fct = nn.CrossEntropyLoss()
 
     # Calculate loss with hard negatives
-    if num_sent == 3:
-        # Note that weights are actually logits of weights
-        z3_weight = cls.model_args.hard_negative_weight
-        weights = torch.tensor(
-            [[0.0] * (cos_sim.size(-1) - z1_z3_cos.size(-1)) + [0.0] * i + [z3_weight] + [0.0] * (z1_z3_cos.size(-1) - i - 1) for i in range(z1_z3_cos.size(-1))]
-        ).to(cls.device)
-        cos_sim = cos_sim + weights
+    # if num_sent == 3:
+    #     # Note that weights are actually logits of weights
+    #     z3_weight = cls.model_args.hard_negative_weight
+    #     weights = torch.tensor(
+    #         [[0.0] * (cos_sim.size(-1) - z1_z3_cos.size(-1)) + [0.0] * i + [z3_weight] + [0.0] * (z1_z3_cos.size(-1) - i - 1) for i in range(z1_z3_cos.size(-1))]
+    #     ).to(cls.device)
+    #     cos_sim = cos_sim + weights
 
     loss = loss_fct(cos_sim, labels)
 
