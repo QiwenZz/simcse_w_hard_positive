@@ -446,10 +446,6 @@ def main():
         else:
             sentences = examples[sent0_cname]*model_args.hard_positive_candidates
             
-        
-            
-        print('************', sentences)
-
         # If hard negative exists
         # if sent2_cname is not None:
         #     for idx in range(total):
@@ -463,8 +459,6 @@ def main():
             truncation=True,
             padding="max_length" if data_args.pad_to_max_length else False,
         )
-
-        print(sent_features)
 
 
 
@@ -482,13 +476,14 @@ def main():
             for key in sent_features:
                 features[key] = []
                 for i in range(total):
+                    temp = []
                     for _ in range(model_args.hard_positive_candidates):
-                        features[key].append(sent_features[key][i])
+                        temp.append(sent_features[key][i])
+                    features[key].append(temp)
 
 
-
-        print(features)
-            
+        print('sent_features',sent_features)
+        print('feawtures',features)
         return features
 
     if training_args.do_train:

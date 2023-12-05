@@ -22,6 +22,6 @@ python train.py \
     --temp 0.05 \
     --do_train \
     --fp16 \
-    --use_hard_positive\
-    --hard_positive_candidates 5 \
+    --use_hard_positive \
+    --hard_positive_candidates 4 \
     "$@"

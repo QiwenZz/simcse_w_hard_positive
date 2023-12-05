@@ -61,14 +61,15 @@ class Pooler(nn.Module):
         assert self.pooler_type in ["cls", "cls_before_pooler", "avg", "avg_top2", "avg_first_last"], "unrecognized pooling type %s" % self.pooler_type
 
     def forward(self, attention_mask, outputs):
-        last_hidden = outputs.last_hidden_state
+        last_hidden = outputs.last_hidden_state # 100x32x768 
+
         print('self.pooler_type',self.pooler_type)
         print('last_hidden.shape',last_hidden[:, 0].shape)
         pooler_output = outputs.pooler_output
         hidden_states = outputs.hidden_states
 
         if self.pooler_type in ['cls_before_pooler', 'cls']:
-            return last_hidden[:, 0]
+            return last_hidden[:, 0] # 100 * 768
         elif self.pooler_type == "avg":
             return ((last_hidden * attention_mask.unsqueeze(-1)).sum(1) / attention_mask.sum(-1).unsqueeze(-1))
         elif self.pooler_type == "avg_first_last":
@@ -121,11 +122,14 @@ def cl_forward(cls,
     mlm_outputs = None
     # Flatten input for encoding
     input_ids = input_ids.view((-1, input_ids.size(-1))) # (bs * num_sent, len)
+
+    # dimension: 100 * 32 ---> 50 * 2 [[0,3,2,5,3,...,],[0,3,2,5,3],[6,88,234,50],[6,88,234,50]]
     
     attention_mask = attention_mask.view((-1, attention_mask.size(-1))) # (bs * num_sent len)
     if token_type_ids is not None:
         token_type_ids = token_type_ids.view((-1, token_type_ids.size(-1))) # (bs * num_sent, len)
 
+    print('input_ids',input_ids)
     print('input_ids',input_ids.shape)
 
     # Get raw embeddings
@@ -156,25 +160,31 @@ def cl_forward(cls,
             return_dict=True,
         )
     
-
     # Pooling
     pooler_output = cls.pooler(attention_mask, outputs)
-    pooler_output = pooler_output.view((batch_size, num_sent, pooler_output.size(-1))) # (bs, num_sent, hidden)
+    pooler_output = pooler_output.view((batch_size, num_sent, pooler_output.size(-1))) # (bs, num_sent, hidden) # dimension: 50 x 2 x 768 final: 50 x 5 x 768
 
+    print('start printing out stuffs......................')
     print('pooler',pooler_output.shape)
 
     # If using "cls", we add an extra MLP layer
     # (same as BERT's original implementation) over the representation.
     if cls.pooler_type == "cls":
         pooler_output = cls.mlp(pooler_output)
-
     # Separate representation
     print('pooler',pooler_output.shape)
     z1, z2 = pooler_output[:,0], pooler_output[:,1]
-    print("type(z1)",type(z1))
-    print(z1)
-    print(z2)
-    print(z1.shape)
+
+
+    # find the farthest positive pair new_z_1, new_z2
+    
+
+
+
+    # print("type(z1)",type(z1))
+    # print(z1)
+    # print(z2)
+    # print(z1.shape)
     # Hard negative
     if num_sent == 3:
         z3 = pooler_output[:, 2]
