@@ -225,13 +225,15 @@ def cl_forward(cls,
 
 
     # Apply the function to the entire tensor
-    min_pairs_tensor = min_cosine_similarity_pairs(pooler_output)
 
-    # print('max_pairs_tensor', min_pairs_tensor)
+    # using cosine similarity
+    # min_pairs_tensor = min_cosine_similarity_pairs(pooler_output)
+    # z1, z2 = min_pairs_tensor[:,0].cuda(), min_pairs_tensor[:,1].cuda()
 
 
-
-    z1, z2 = min_pairs_tensor[:,0].cuda(), min_pairs_tensor[:,1].cuda()
+    # Using dot product
+    max_pairs_tensor = max_distance_pairs(pooler_output)
+    z1, z2 = max_pairs_tensor[:,0].cuda(), max_pairs_tensor[:,1].cuda()
     # print('z1 device',z1.get_device())
 
 
