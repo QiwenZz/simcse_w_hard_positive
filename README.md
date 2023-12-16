@@ -4,7 +4,7 @@ This repo is based on SimCSE with the hard positive trick. The code is all from 
 
 Hard positive is a way to find more meaningful positive pairs that teach the model to learn a better representation based on our research.
 
-See our report: Contrastive Learning with Hard Positive Samples in NLP tasks[https://github.com/QiwenZz/simcse_w_hard_positive/blob/main/Contrastive%20Learning%20with%20Sub-optimal%20Positive%20Samples%20in%20NLP%20tasks.pdf]
+See our report for more insights: [Contrastive Learning with Hard Positive Samples in NLP tasks](https://github.com/QiwenZz/simcse_w_hard_positive/blob/main/Contrastive%20Learning%20with%20Sub-optimal%20Positive%20Samples%20in%20NLP%20tasks.pdf)
 
 
 
