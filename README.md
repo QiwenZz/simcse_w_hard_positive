@@ -8,7 +8,7 @@ See our report for more details: [Contrastive Learning with Hard Positive Sample
 
 To train your SimCSE model, edit and run run_unsup_example.sh.
 
-In run_unsup_example.sh, you can choose whether to train the model with hard positive selection with the hyper-parameter `--use_hard_positive` and the number of positive sample candidates with `hard_positive_candidates`.
+In run_unsup_example.sh, you can choose whether to train the model with hard positive selection with the hyper-parameter `--use_hard_positive` and the number of positive sample candidates with `--hard_positive_candidates`.
 
 Currently, the code only supports unsupervised training with txt file as the input training data. 
 
